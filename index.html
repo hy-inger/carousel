@@ -22,14 +22,10 @@
                 position: relative;
                 display: none;
                 left: 0;
-                transition:left 3s;
             }
             .carousel .carousel-inner .item.active{
                 display: block;
                 left: 0;
-            }
-            .carousel .carousel-inner .active.left{
-                left: -100%;
             }
             .carousel .carousel-inner .item.next{
                 display: block;
@@ -38,8 +34,12 @@
                 left:100%;
                 width: 100%;
             }
-            .carousel .carousel-inner .next.left{
-                left: 0;
+            .carousel .carousel-inner .item.prev{
+                display: block;
+                position: absolute;
+                top:0;
+                left:-100%;
+                width: 100%;
             }
 
             .carousel .carousel-inner img{
@@ -60,6 +60,25 @@
             }
             .carousel .btn-wrap .right{
                 right: 10px;
+            }
+            .carousel .btn-dot{
+                position: absolute;
+                bottom:0;
+                right: 0;
+                list-style: none;
+            }
+            .carousel .btn-dot li{
+                background-color: #000;
+                width: 20px;
+                height: 20px;
+                float: left;
+                border-radius: 20px;
+                opacity: 0.6;
+                margin:0 10px;
+                cursor: pointer;
+            }
+            .carousel .btn-dot li.active{
+                background-color: #fff;
             }
             .clearfix:after{
                 content: '';
@@ -88,68 +107,135 @@
                 <i class="wrap left" id="left"> < </i>
                 <i class="wrap right" id="right"> > </i>
             </div>
+            <ol class="btn-dot" id="btn-dot">
+                <li class="li active"></li>
+                <li class="li"></li>
+                <li class="li"></li>
+            </ol>
         </div>
     </body>
     <script type="text/javascript" src="basic.js"></script>
+    <script type="text/javascript" src="carousel.js"></script>
     <script type="text/javascript">
         window.onload = function(){
             var left = document.getElementById('left');
             var right = document.getElementById('right');
             var carousel_inner = document.getElementById('carousel-inner');
+            Carousel.swiper('carousel-inner');
+
             var item = carousel_inner.querySelectorAll('.item');
+            var li_list = document.querySelectorAll('.btn-dot .li');
             addEvent(right,'click',function(){
                 for(var i=0;i<item.length;i++){
                     var ele = item[i];
                     if(hasClass(ele,'active')&&(i+1<item.length)){
                         var width = item[i].offsetWidth;
                         var current_left = ele.offsetLeft;
-                        var left = width*(i+1);
                         var incream = width/(1000/10);
-                        addClass(ele,'left');
+                        
                         addClass(item[i+1],'next');
-                        removeClass(ele,'active');
-                        addClass(item[i+1],'left');
-                        removeClass(item[i+1],'next');
-                        //item[i+1].style.left = '0px';
-                        //removeClass(ele,'active');
-                        //addClass(item[i+1],'active');
-                        /*slideLeft(ele,current_left,incream,width,function(){
+                        ele.offsetWidth;
+                        slideLeft(ele,ele.offsetLeft,ele.offsetWidth,-ele.offsetWidth,function(){
                             removeClass(ele,'active');
-                            if(i+1<item.length){
-                                addClass(item[i+1],'active');
-                            }
-                        })*/
+                            removeClass(li_list[i],'active');
+                        });
+                        slideLeft(item[i+1],item[i+1].offsetLeft,item[i+1].offsetWidth,0,function(){
+                            addClass(item[i+1],'active');
+                            addClass(li_list[i+1],'active');
+                            removeClass(item[i+1],'next');
+                        })
                         break;
                     }
                 }
             });
-            function slideLeft (ele,current_left,incream,left,callback){
+            addEvent(left,'click',function(){
+                for(var i=0;i<item.length;i++){
+                    var ele = item[i];
+                    if(hasClass(ele,'active')&&(i-1<item.length)){
+
+                        addClass(item[i-1],'prev');
+                        ele.offsetWidth;
+                        slideRight(ele,ele.offsetLeft,ele.offsetWidth,ele.offsetWidth,function(){
+                            removeClass(ele,'active');
+                            removeClass(li_list[i],'active');
+                        });
+                        slideRight(item[i-1],item[i-1].offsetLeft,item[i-1].offsetWidth,0,function(){
+                            addClass(item[i-1],'active');
+                            addClass(li_list[i-1],'active');
+                            removeClass(item[i-1],'prev');
+
+                        })
+                        break;
+                    }
+                }
+            });
+            
+            for(var i=0;i<li_list.length;i++){
+                var li = li_list[i];
+                test(i);
+                function test(i){
+                    addEvent(li,'mouseover',function(){
+                        for(var j=0;j<item.length;j++){
+                            var ele = item[j];
+                           if(hasClass(ele,'active')){
+                                if(j>i&&j>0){
+                                    addClass(item[i],'prev');
+                                    ele.offsetWidth;
+                                    slideRight(ele,ele.offsetLeft,ele.offsetWidth,ele.offsetWidth,function(){
+                                        removeClass(ele,'active');
+                                        removeClass(li_list[j],'active');
+                                    });
+                                    slideRight(item[i],item[i].offsetLeft,item[i].offsetWidth,0,function(){
+                                        addClass(item[i],'active');
+                                        addClass(li_list[i],'active');
+                                        removeClass(item[i],'prev');
+                                    })
+                                } else if(j<i&&j<item.length){
+                                    addClass(item[i],'next');
+                                    ele.offsetWidth;
+                                    slideLeft(ele,ele.offsetLeft,ele.offsetWidth,-ele.offsetWidth,function(){
+                                        removeClass(ele,'active');
+                                        removeClass(li_list[j],'active');
+                                    });
+                                    slideLeft(item[i],item[i].offsetLeft,item[i].offsetWidth,0,function(){
+                                        addClass(item[i],'active');
+                                        addClass(li_list[i],'active');
+                                        removeClass(item[i],'next');
+                                    })
+                                }
+                                break;
+                           }     
+                        }
+                    })
+                }
+            }
+
+            function slideLeft (ele,current_left,width,left,callback){
+                var incream =  width/(500/10);
                 var timer = setTimeout(function(){
                     current_left -=incream;
                     ele.style.left = current_left+'px';
                     clearInterval(timer);
-                    if(-current_left>=left){
+                    if(-current_left>=-left){
                         callback();
                     } else {
-                        slideLeft(ele,current_left,incream,left,callback);
+                        slideLeft(ele,current_left,width,left,callback);
                     }
                 },10);
             }
-            function slideRight (ele,current_left,left){
+            function slideRight (ele,current_left,width,left,callback){
+                var incream =  width/(500/10);
                 var timer = setTimeout(function(){
-                    current_left -=incream;
+                    current_left +=incream;
                     ele.style.left = current_left+'px';
                     clearInterval(timer);
-                    if(-current_left>=left){
+                    if(current_left>=left){
                         callback();
                     } else {
-                        slideLeft(ele,current_left,incream,left,callback);
+                        slideRight(ele,current_left,width,left,callback);
                     }
                 },10);
             }
         }
-        var Carousel = (function(){
-
-        })();
     </script>
 </html>
